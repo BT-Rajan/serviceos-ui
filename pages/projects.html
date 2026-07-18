@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServiceOS — Projects</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-brand"><span class="dot"></span><span>ServiceOS</span></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group-label">Overview</div>
+      <a class="nav-item" data-page="dashboard" href="dashboard.html"><svg class="icon"><use href="#icon-grid"/></svg><span>Dashboard</span></a>
+      <div class="sidebar-group-label">Work</div>
+      <a class="nav-item" data-page="projects" href="projects.html"><svg class="icon"><use href="#icon-folder"/></svg><span>Projects</span></a>
+      <a class="nav-item" data-page="tasks" href="tasks.html"><svg class="icon"><use href="#icon-check-square"/></svg><span>Tasks</span></a>
+      <a class="nav-item" data-page="documents" href="documents.html"><svg class="icon"><use href="#icon-file"/></svg><span>Documents</span></a>
+      <div class="sidebar-group-label">Workflow</div>
+      <a class="nav-item" data-page="workflow" href="workflow.html"><svg class="icon"><use href="#icon-git-branch"/></svg><span>Workflows</span></a>
+      <a class="nav-item" data-page="workflow-designer" href="workflow-designer.html"><svg class="icon"><use href="#icon-layout"/></svg><span>Workflow Designer</span></a>
+      <a class="nav-item" data-page="templates" href="templates.html"><svg class="icon"><use href="#icon-copy"/></svg><span>Templates</span></a>
+      <div class="sidebar-group-label">People</div>
+      <a class="nav-item" data-page="users" href="users.html"><svg class="icon"><use href="#icon-users"/></svg><span>Users</span></a>
+      <a class="nav-item" data-page="vendors" href="vendors.html"><svg class="icon"><use href="#icon-truck"/></svg><span>Vendors</span></a>
+      <a class="nav-item" data-page="clients" href="clients.html"><svg class="icon"><use href="#icon-briefcase"/></svg><span>Clients</span></a>
+      <div class="sidebar-group-label">Insights</div>
+      <a class="nav-item" data-page="reports" href="reports.html"><svg class="icon"><use href="#icon-bar-chart"/></svg><span>Reports</span></a>
+      <a class="nav-item" data-page="analytics" href="analytics.html"><svg class="icon"><use href="#icon-trending-up"/></svg><span>Analytics</span></a>
+      <div class="sidebar-group-label">Communication</div>
+      <a class="nav-item" data-page="chatbot" href="chatbot.html"><svg class="icon"><use href="#icon-message-circle"/></svg><span>Chatbot</span></a>
+      <a class="nav-item" data-page="notifications" href="notifications.html"><svg class="icon"><use href="#icon-bell"/></svg><span>Notifications</span></a>
+      <div class="sidebar-group-label">Administration</div>
+      <a class="nav-item" data-page="agent-studio" href="agent-studio.html"><svg class="icon"><use href="#icon-cpu"/></svg><span>Agent Studio</span></a>
+      <a class="nav-item" data-page="audit" href="audit.html"><svg class="icon"><use href="#icon-shield"/></svg><span>Audit Log</span></a>
+      <a class="nav-item" data-page="settings" href="settings.html"><svg class="icon"><use href="#icon-settings"/></svg><span>Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" id="sidebarCollapseBtn" style="width:100%;"><svg class="icon icon-directional"><use href="#icon-chevrons-left"/></svg><span>Collapse</span></button>
+    </div>
+  </aside>
+
+  <!-- ============ HEADER ============ -->
+  <header class="app-header">
+    <button class="header-toggle" id="sidebarMobileToggle" aria-label="Toggle sidebar"><svg class="icon"><use href="#icon-menu"/></svg></button>
+    <label class="header-search">
+      <svg class="icon icon-muted"><use href="#icon-search"/></svg>
+      <input type="text" placeholder="Search projects, tasks, clients…" id="globalSearchInput">
+      <kbd>/</kbd>
+    </label>
+    <div class="header-spacer"></div>
+    <div class="header-actions">
+      <button class="icon-button" id="themeToggleBtn" aria-label="Toggle theme"><svg class="icon" id="themeIcon"><use href="#icon-moon"/></svg></button>
+      <button class="icon-button" id="langToggleBtn" aria-label="Toggle language"><svg class="icon"><use href="#icon-globe"/></svg></button>
+      <button class="icon-button" id="notifBtn" aria-label="Notifications"><svg class="icon"><use href="#icon-bell"/></svg><span class="notif-dot"></span></button>
+      <button class="user-menu-trigger" id="userMenuBtn"><div class="avatar avatar-sm">RB</div><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-down"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="app-main">
+    <div class="flex items-center justify-between" style="margin-bottom: var(--space-6);">
+      <div>
+        <h1>Projects</h1>
+        <p class="text-slate" style="margin-top:4px;">24 active · 6 at risk · 3 blocked</p>
+      </div>
+      <button class="btn btn-primary" id="newProjectBtn">
+        <svg class="icon icon-sm"><use href="#icon-plus"/></svg>
+        New Project
+      </button>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <label class="filter-search">
+        <svg class="icon icon-sm icon-muted"><use href="#icon-search"/></svg>
+        <input type="text" placeholder="Filter by name or client…" id="projectFilterInput">
+      </label>
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="running">Running</button>
+      <button class="filter-chip" data-filter="warning">At risk</button>
+      <button class="filter-chip" data-filter="danger">Blocked</button>
+      <button class="filter-chip" data-filter="success">Complete</button>
+      <div class="header-spacer"></div>
+      <div class="segmented" id="viewToggle">
+        <button class="active" data-view="grid" aria-label="Grid view"><svg class="icon icon-sm"><use href="#icon-grid"/></svg></button>
+        <button data-view="table" aria-label="Table view"><svg class="icon icon-sm"><use href="#icon-list"/></svg></button>
+      </div>
+    </div>
+
+    <!-- GRID VIEW -->
+    <div class="grid grid-3" id="projectGrid">
+
+      <a class="card card-rail status-running" href="project-details.html" data-status="running" data-name="Client Onboarding — Acme Retail">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Client Onboarding</div>
+            <div class="card-subtitle">Acme Retail</div>
+          </div>
+          <span class="badge status-running">Running</span>
+        </div>
+        <div class="progress" style="margin-bottom:var(--space-2);"><div class="progress-bar" style="width:62%;"></div></div>
+        <div class="flex items-center justify-between text-sm text-slate">
+          <span>62% complete</span><span class="mono">Due Aug 4</span>
+        </div>
+        <div class="flex items-center justify-between" style="margin-top:var(--space-4);">
+          <div class="avatar-stack">
+            <div class="avatar avatar-sm">PK</div>
+            <div class="avatar avatar-sm">RD</div>
+            <div class="avatar avatar-sm avatar-overflow">+2</div>
+          </div>
+          <span class="tag">PRJ-1042</span>
+        </div>
+      </a>
+
+      <a class="card card-rail status-warning" href="project-details.html" data-status="warning" data-name="Q3 Vendor Review — Northwind Logistics">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Q3 Vendor Review</div>
+            <div class="card-subtitle">Northwind Logistics</div>
+          </div>
+          <span class="badge status-warning">At risk</span>
+        </div>
+        <div class="progress" style="margin-bottom:var(--space-2);"><div class="progress-bar status-warning" style="width:38%;"></div></div>
+        <div class="flex items-center justify-between text-sm text-slate">
+          <span>38% complete</span><span class="mono">Due Jul 22</span>
+        </div>
+        <div class="flex items-center justify-between" style="margin-top:var(--space-4);">
+          <div class="avatar-stack"><div class="avatar avatar-sm">SM</div><div class="avatar avatar-sm">JT</div></div>
+          <span class="tag">PRJ-1039</span>
+        </div>
+      </a>
+
+      <a class="card card-rail status-danger" href="project-details.html" data-status="danger" data-name="Vendor Sync — Meridian Supply">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Vendor Sync Migration</div>
+            <div class="card-subtitle">Meridian Supply</div>
+          </div>
+          <span class="badge status-danger">Blocked</span>
+        </div>
+        <div class="progress" style="margin-bottom:var(--space-2);"><div class="progress-bar status-danger" style="width:21%;"></div></div>
+        <div class="flex items-center justify-between text-sm text-slate">
+          <span>21% complete</span><span class="mono">Due Jul 19</span>
+        </div>
+        <div class="flex items-center justify-between" style="margin-top:var(--space-4);">
+          <div class="avatar-stack"><div class="avatar avatar-sm">DN</div></div>
+          <span class="tag">PRJ-1031</span>
+        </div>
+      </a>
+
+      <a class="card card-rail status-success" href="project-details.html" data-status="success" data-name="Brand Refresh — Solace Wellness">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Brand Refresh</div>
+            <div class="card-subtitle">Solace Wellness</div>
+          </div>
+          <span class="badge status-success">Complete</span>
+        </div>
+        <div class="progress" style="margin-bottom:var(--space-2);"><div class="progress-bar status-success" style="width:100%;"></div></div>
+        <div class="flex items-center justify-between text-sm text-slate">
+          <span>100% complete</span><span class="mono">Closed Jul 10</span>
+        </div>
+        <div class="flex items-center justify-between" style="margin-top:var(--space-4);">
+          <div class="avatar-stack"><div class="avatar avatar-sm">RB</div><div class="avatar avatar-sm">PK</div></div>
+          <span class="tag">PRJ-1018</span>
+        </div>
+      </a>
+
+      <a class="card card-rail status-running" href="project-details.html" data-status="running" data-name="Fleet Audit — Meridian Supply">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Fleet Audit</div>
+            <div class="card-subtitle">Meridian Supply</div>
+          </div>
+          <span class="badge status-running">Running</span>
+        </div>
+        <div class="progress" style="margin-bottom:var(--space-2);"><div class="progress-bar" style="width:80%;"></div></div>
+        <div class="flex items-center justify-between text-sm text-slate">
+          <span>80% complete</span><span class="mono">Due Jul 28</span>
+        </div>
+        <div class="flex items-center justify-between" style="margin-top:var(--space-4);">
+          <div class="avatar-stack"><div class="avatar avatar-sm">JT</div><div class="avatar avatar-sm">SM</div></div>
+          <span class="tag">PRJ-1044</span>
+        </div>
+      </a>
+
+      <a class="card card-rail status-neutral" href="project-details.html" data-status="neutral" data-name="Loyalty Program — Acme Retail">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Loyalty Program Pilot</div>
+            <div class="card-subtitle">Acme Retail</div>
+          </div>
+          <span class="badge">Not started</span>
+        </div>
+        <div class="progress" style="margin-bottom:var(--space-2);"><div class="progress-bar" style="width:0%; background:var(--status-neutral);"></div></div>
+        <div class="flex items-center justify-between text-sm text-slate">
+          <span>0% complete</span><span class="mono">Starts Aug 12</span>
+        </div>
+        <div class="flex items-center justify-between" style="margin-top:var(--space-4);">
+          <div class="avatar-stack"><div class="avatar avatar-sm">RD</div></div>
+          <span class="tag">PRJ-1051</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div class="table-wrap" id="projectTable" style="display:none;">
+      <table class="table-responsive">
+        <thead>
+          <tr><th>Project</th><th>Client</th><th>Status</th><th>Progress</th><th>Owner</th><th>Due</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr class="status-running" data-status="running">
+            <td data-label="Project"><a href="project-details.html" style="color:var(--color-ink); font-weight:500;">Client Onboarding</a></td>
+            <td data-label="Client">Acme Retail</td>
+            <td data-label="Status"><span class="badge status-running">Running</span></td>
+            <td data-label="Progress" class="mono">62%</td>
+            <td data-label="Owner"><div class="avatar avatar-sm">PK</div></td>
+            <td data-label="Due" class="mono">Aug 4</td>
+            <td><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-right"/></svg></td>
+          </tr>
+          <tr class="status-warning" data-status="warning">
+            <td data-label="Project"><a href="project-details.html" style="color:var(--color-ink); font-weight:500;">Q3 Vendor Review</a></td>
+            <td data-label="Client">Northwind Logistics</td>
+            <td data-label="Status"><span class="badge status-warning">At risk</span></td>
+            <td data-label="Progress" class="mono">38%</td>
+            <td data-label="Owner"><div class="avatar avatar-sm">SM</div></td>
+            <td data-label="Due" class="mono">Jul 22</td>
+            <td><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-right"/></svg></td>
+          </tr>
+          <tr class="status-danger" data-status="danger">
+            <td data-label="Project"><a href="project-details.html" style="color:var(--color-ink); font-weight:500;">Vendor Sync Migration</a></td>
+            <td data-label="Client">Meridian Supply</td>
+            <td data-label="Status"><span class="badge status-danger">Blocked</span></td>
+            <td data-label="Progress" class="mono">21%</td>
+            <td data-label="Owner"><div class="avatar avatar-sm">DN</div></td>
+            <td data-label="Due" class="mono">Jul 19</td>
+            <td><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-right"/></svg></td>
+          </tr>
+          <tr class="status-success" data-status="success">
+            <td data-label="Project"><a href="project-details.html" style="color:var(--color-ink); font-weight:500;">Brand Refresh</a></td>
+            <td data-label="Client">Solace Wellness</td>
+            <td data-label="Status"><span class="badge status-success">Complete</span></td>
+            <td data-label="Progress" class="mono">100%</td>
+            <td data-label="Owner"><div class="avatar avatar-sm">RB</div></td>
+            <td data-label="Due" class="mono">Jul 10</td>
+            <td><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-right"/></svg></td>
+          </tr>
+          <tr class="status-running" data-status="running">
+            <td data-label="Project"><a href="project-details.html" style="color:var(--color-ink); font-weight:500;">Fleet Audit</a></td>
+            <td data-label="Client">Meridian Supply</td>
+            <td data-label="Status"><span class="badge status-running">Running</span></td>
+            <td data-label="Progress" class="mono">80%</td>
+            <td data-label="Owner"><div class="avatar avatar-sm">JT</div></td>
+            <td data-label="Due" class="mono">Jul 28</td>
+            <td><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-right"/></svg></td>
+          </tr>
+          <tr data-status="neutral">
+            <td data-label="Project"><a href="project-details.html" style="color:var(--color-ink); font-weight:500;">Loyalty Program Pilot</a></td>
+            <td data-label="Client">Acme Retail</td>
+            <td data-label="Status"><span class="badge">Not started</span></td>
+            <td data-label="Progress" class="mono">0%</td>
+            <td data-label="Owner"><div class="avatar avatar-sm">RD</div></td>
+            <td data-label="Due" class="mono">Aug 12</td>
+            <td><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-right"/></svg></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <span class="text-sm text-slate">Showing 6 of 24 projects</span>
+      <div class="pagination-pages">
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>4</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/components.js"></script>
+<script src="../js/charts.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (function () {
+    // View toggle: grid <-> table
+    const viewToggle = document.getElementById("viewToggle");
+    const grid = document.getElementById("projectGrid");
+    const table = document.getElementById("projectTable");
+    if (viewToggle) {
+      viewToggle.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-view]");
+        if (!btn) return;
+        viewToggle.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const isGrid = btn.dataset.view === "grid";
+        grid.style.display = isGrid ? "" : "none";
+        table.style.display = isGrid ? "none" : "";
+      });
+    }
+
+    // Status filter chips — filter both grid cards and table rows
+    const chips = document.querySelectorAll(".filter-chip");
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        chips.forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        const filter = chip.dataset.filter;
+        document.querySelectorAll("#projectGrid > [data-status]").forEach(card => {
+          card.style.display = (filter === "all" || card.dataset.status === filter) ? "" : "none";
+        });
+        document.querySelectorAll("#projectTable tbody tr[data-status]").forEach(row => {
+          row.style.display = (filter === "all" || row.dataset.status === filter) ? "" : "none";
+        });
+      });
+    });
+
+    // Free-text filter by name/client
+    const filterInput = document.getElementById("projectFilterInput");
+    if (filterInput) {
+      filterInput.addEventListener("input", () => {
+        const q = filterInput.value.trim().toLowerCase();
+        document.querySelectorAll("#projectGrid > [data-name]").forEach(card => {
+          card.style.display = card.dataset.name.toLowerCase().includes(q) ? "" : "none";
+        });
+      });
+    }
+
+    const newBtn = document.getElementById("newProjectBtn");
+    if (newBtn) newBtn.addEventListener("click", () => {
+      if (window.ServiceOSToast) window.ServiceOSToast({ title: "New Project", message: "This is a prototype — no project was created.", status: "running" });
+    });
+  })();
+</script>
+
+<!-- Icon sprite -->
+<svg style="display:none">
+  <defs>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></symbol>
+    <symbol id="icon-check-square" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
+    <symbol id="icon-git-branch" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/><circle cx="18" cy="6" r="3"/></symbol>
+    <symbol id="icon-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-truck" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+    <symbol id="icon-briefcase" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+    <symbol id="icon-bar-chart" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></symbol>
+    <symbol id="icon-trending-up" viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></symbol>
+    <symbol id="icon-message-circle" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="icon-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></symbol>
+    <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="icon-chevrons-left" viewBox="0 0 24 24"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="icon-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="icon-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  </defs>
+</svg>
+</body>
+</html>
