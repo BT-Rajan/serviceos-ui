@@ -47,7 +47,7 @@ const teamUtilization = computed(() => store.users.filter(u => u.status === 'act
 
   <div class="grid grid-4" style="margin-bottom: var(--space-6);">
     <div v-for="k in kpis" :key="k.label" class="card">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between" dir="ltr">
         <div>
           <div class="text-sm text-slate">{{ k.label }}</div>
           <div style="font-family:var(--font-display); font-size:var(--text-2xl); margin-top:var(--space-1);" :class="{ mono: k.mono }">
