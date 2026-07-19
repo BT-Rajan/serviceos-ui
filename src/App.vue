@@ -1,13 +1,11 @@
 <script setup>
-import { onMounted } from 'vue'
-import { useUiStore } from './stores/ui'
-import IconSprite from './components/ui/IconSprite.vue'
+import { useRoute } from 'vue-router'
+import AppLayout from './layouts/AppLayout.vue'
 
-const ui = useUiStore()
-onMounted(() => ui.applyDocumentAttrs())
+const route = useRoute()
 </script>
 
 <template>
-  <IconSprite />
-  <router-view />
+  <router-view v-if="route.meta.layout === 'blank'" />
+  <AppLayout v-else />
 </template>

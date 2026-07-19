@@ -1,3 +1,142 @@
+/* =========================================================
+   ServiceOS — Design System
+   Pass 1 — style.css
+   Source of truth: ../design-spec.md
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* ---------------------------------------------------------
+   1. TOKENS
+   --------------------------------------------------------- */
+:root,
+[data-theme="light"] {
+  /* Surfaces */
+  --color-bg: #F7F8F6;
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #FFFFFF;
+  --color-border: #E2E5E7;
+  --color-border-strong: #C8CDD1;
+
+  /* Text */
+  --color-ink: #14171C;
+  --color-slate: #5B6472;
+  --color-slate-soft: #8A93A0;
+
+  /* Signal */
+  --color-signal: #2F6FED;
+  --color-signal-soft: #EAF1FE;
+  --color-signal-ink: #FFFFFF;
+
+  /* Status */
+  --status-running: #2F6FED;
+  --status-running-soft: #EAF1FE;
+  --status-success: #1F9D66;
+  --status-success-soft: #E8F7EF;
+  --status-warning: #C77C11;
+  --status-warning-soft: #FBF1E1;
+  --status-danger: #D8452F;
+  --status-danger-soft: #FCEAE6;
+  --status-neutral: #8A93A0;
+  --status-neutral-soft: #EEF0F2;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(20, 23, 28, 0.05), 0 1px 1px rgba(20, 23, 28, 0.03);
+  --shadow-md: 0 4px 12px rgba(20, 23, 28, 0.08), 0 2px 4px rgba(20, 23, 28, 0.04);
+  --shadow-lg: 0 12px 32px rgba(20, 23, 28, 0.14), 0 4px 8px rgba(20, 23, 28, 0.06);
+}
+
+[data-theme="dark"] {
+  --color-bg: #0F1216;
+  --color-surface: #171B21;
+  --color-surface-raised: #1E232B;
+  --color-border: #272D36;
+  --color-border-strong: #3A4250;
+
+  --color-ink: #EDEFF2;
+  --color-slate: #9BA4B0;
+  --color-slate-soft: #6B7382;
+
+  --color-signal: #5B8DF7;
+  --color-signal-soft: #1B2740;
+  --color-signal-ink: #0F1216;
+
+  --status-running: #5B8DF7;
+  --status-running-soft: #16233E;
+  --status-success: #34B57D;
+  --status-success-soft: #123626;
+  --status-warning: #E0973A;
+  --status-warning-soft: #3A2A11;
+  --status-danger: #E56A50;
+  --status-danger-soft: #3A1D16;
+  --status-neutral: #9BA4B0;
+  --status-neutral-soft: #232830;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+:root {
+  /* Type */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-ui: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+
+  --lh-xs: 16px;
+  --lh-sm: 20px;
+  --lh-base: 24px;
+  --lh-lg: 26px;
+  --lh-xl: 30px;
+  --lh-2xl: 36px;
+  --lh-3xl: 44px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-full: 999px;
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 72px;
+  --header-height: 64px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+
+  /* Breakpoints (reference only — used in media queries below) */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ---------------------------------------------------------
    2. RESET / BASE
    --------------------------------------------------------- */
@@ -708,4 +847,70 @@ tbody tr.status-danger  { border-inline-start-color: var(--status-danger); }
 @media (max-width: 767px) {
   .auth-shell { grid-template-columns: 1fr; }
   .auth-side { display: none; }
+}
+
+/* ---------------------------------------------------------
+   ADDENDUM — workflow stepper, drawer nav sub-items
+   Added to support the Vue-app Workflow / Workflow Designer
+   views; follows the same token/status conventions as the
+   rest of the system rather than introducing new colors.
+   --------------------------------------------------------- */
+.wf-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-4); }
+.wf-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+.wf-stepper { display: flex; align-items: center; }
+.wf-step { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
+.wf-step-dot {
+  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--color-bg); border: 2px solid var(--color-border-strong); color: var(--color-slate);
+  font-size: var(--text-xs); font-weight: 600; flex-shrink: 0;
+}
+.wf-step.is-done .wf-step-dot { background: var(--status-success); border-color: var(--status-success); color: #fff; }
+.wf-step.is-current .wf-step-dot { background: var(--color-signal); border-color: var(--color-signal); color: #fff; }
+.wf-step-label { font-size: var(--text-xs); color: var(--color-slate); text-align: center; max-width: 84px; }
+.wf-step.is-current .wf-step-label { color: var(--color-ink); font-weight: 500; }
+.wf-connector { flex: 1 1 auto; height: 2px; background: var(--color-border); margin: 0 var(--space-1); margin-bottom: 22px; }
+.wf-connector.is-done { background: var(--status-success); }
+@media (max-width: 767px) {
+  .wf-stepper { overflow-x: auto; padding-bottom: var(--space-2); }
+  .wf-step-label { max-width: 64px; }
+}
+
+/* ---------------------------------------------------------
+   ADDENDUM — Workflow Designer (palette + canvas)
+   --------------------------------------------------------- */
+.designer-toolbar {
+  display: flex; align-items: center; gap: var(--space-3);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5);
+}
+.designer-toolbar .input { max-width: 320px; }
+.designer-layout { display: grid; grid-template-columns: 220px 1fr; gap: var(--space-5); align-items: start; }
+.designer-panel {
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+.designer-panel-title { font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--space-3); }
+.palette-item {
+  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm); cursor: grab; margin-bottom: var(--space-1);
+}
+.palette-item:hover { background: var(--color-bg); }
+.palette-item-label { font-size: var(--text-sm); }
+.icon-wrap { width: 28px; height: 28px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.designer-canvas-wrap {
+  background: var(--color-surface); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md);
+  min-height: 480px; padding: var(--space-6);
+}
+.designer-canvas { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.designer-node {
+  display: flex; align-items: center; gap: var(--space-3); background: var(--color-surface-raised);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+  width: 260px; box-shadow: var(--shadow-sm); position: relative;
+}
+.designer-node-label { flex: 1; font-size: var(--text-sm); font-weight: 500; }
+.designer-node-remove { background: none; border: none; cursor: pointer; color: var(--color-slate-soft); display: flex; }
+.designer-node-remove:hover { color: var(--status-danger); }
+.designer-connector { width: 2px; height: 28px; background: var(--color-border-strong); }
+@media (max-width: 1023px) {
+  .designer-layout { grid-template-columns: 1fr; }
 }
