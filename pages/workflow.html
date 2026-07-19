@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServiceOS — Workflows</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  /* ---------------------------------------------------------
+     Pass 8 addition: workflow stepper + drawer backdrop.
+     Reads only tokens from style.css — no hard-coded hex,
+     consistent with the theming contract in design-spec.md.
+     --------------------------------------------------------- */
+  .wf-card { padding: var(--space-5); margin-bottom: var(--space-4); }
+  .wf-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); }
+  .wf-stepper { display: flex; align-items: flex-start; overflow-x: auto; padding-bottom: var(--space-2); }
+  .wf-step { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; width: 120px; text-align: center; }
+  .wf-step-dot {
+    width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 600;
+    border: 2px solid var(--color-border-strong); background: var(--color-surface); color: var(--color-slate-soft);
+  }
+  .wf-step.is-done .wf-step-dot { background: var(--status-success); border-color: var(--status-success); color: #fff; }
+  .wf-step.is-current .wf-step-dot { border-color: var(--status-running); color: var(--status-running); box-shadow: 0 0 0 3px var(--status-running-soft); }
+  .wf-step.is-current.is-warning .wf-step-dot { border-color: var(--status-warning); color: var(--status-warning); box-shadow: 0 0 0 3px var(--status-warning-soft); }
+  .wf-step.is-current.is-danger .wf-step-dot { border-color: var(--status-danger); color: var(--status-danger); box-shadow: 0 0 0 3px var(--status-danger-soft); animation: wf-pulse 1.6s ease-in-out infinite; }
+  @keyframes wf-pulse { 0%,100% { box-shadow: 0 0 0 3px var(--status-danger-soft); } 50% { box-shadow: 0 0 0 6px var(--status-danger-soft); } }
+  .wf-step-label { font-size: var(--text-xs); color: var(--color-slate-soft); margin-top: var(--space-2); line-height: 1.3; }
+  .wf-step.is-done .wf-step-label { color: var(--color-slate); }
+  .wf-step.is-current .wf-step-label { color: var(--color-ink); font-weight: 600; }
+  .wf-connector { flex: 1 1 auto; height: 2px; background: var(--color-border); margin-top: 13px; min-width: 24px; }
+  .wf-connector.is-done { background: var(--status-success); }
+  .wf-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+
+  .wf-drawer-backdrop { position: fixed; inset: 0; background: rgba(15, 18, 22, 0.5); z-index: 99; opacity: 0; pointer-events: none; transition: opacity var(--duration-base) var(--ease); }
+  .wf-drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .wf-drawer { transform: translateX(100%); transition: transform var(--duration-base) var(--ease); display: flex; flex-direction: column; }
+  .wf-drawer.open { transform: translateX(0); }
+  .wf-timeline-item { display: flex; gap: var(--space-3); padding-block: var(--space-3); border-bottom: 1px solid var(--color-border); }
+  .wf-timeline-item:last-child { border-bottom: none; }
+  .wf-timeline-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; background: var(--color-border-strong); }
+  .wf-timeline-item.is-done .wf-timeline-dot { background: var(--status-success); }
+  .wf-timeline-item.is-current .wf-timeline-dot { background: var(--status-running); }
+  [dir="rtl"] .wf-drawer { transform: translateX(-100%); }
+  [dir="rtl"] .wf-drawer.open { transform: translateX(0); }
+</style>
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-brand"><span class="dot"></span><span>ServiceOS</span></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group-label">Overview</div>
+      <a class="nav-item" data-page="dashboard" href="dashboard.html"><svg class="icon"><use href="#icon-grid"/></svg><span>Dashboard</span></a>
+      <div class="sidebar-group-label">Work</div>
+      <a class="nav-item" data-page="projects" href="projects.html"><svg class="icon"><use href="#icon-folder"/></svg><span>Projects</span></a>
+      <a class="nav-item" data-page="tasks" href="tasks.html"><svg class="icon"><use href="#icon-check-square"/></svg><span>Tasks</span></a>
+      <a class="nav-item" data-page="documents" href="documents.html"><svg class="icon"><use href="#icon-file"/></svg><span>Documents</span></a>
+      <div class="sidebar-group-label">Workflow</div>
+      <a class="nav-item active" data-page="workflow" href="workflow.html"><svg class="icon"><use href="#icon-git-branch"/></svg><span>Workflows</span></a>
+      <a class="nav-item" data-page="workflow-designer" href="workflow-designer.html"><svg class="icon"><use href="#icon-layout"/></svg><span>Workflow Designer</span></a>
+      <a class="nav-item" data-page="templates" href="templates.html"><svg class="icon"><use href="#icon-copy"/></svg><span>Templates</span></a>
+      <div class="sidebar-group-label">People</div>
+      <a class="nav-item" data-page="users" href="users.html"><svg class="icon"><use href="#icon-users"/></svg><span>Users</span></a>
+      <a class="nav-item" data-page="vendors" href="vendors.html"><svg class="icon"><use href="#icon-truck"/></svg><span>Vendors</span></a>
+      <a class="nav-item" data-page="clients" href="clients.html"><svg class="icon"><use href="#icon-briefcase"/></svg><span>Clients</span></a>
+      <div class="sidebar-group-label">Insights</div>
+      <a class="nav-item" data-page="reports" href="reports.html"><svg class="icon"><use href="#icon-bar-chart"/></svg><span>Reports</span></a>
+      <a class="nav-item" data-page="analytics" href="analytics.html"><svg class="icon"><use href="#icon-trending-up"/></svg><span>Analytics</span></a>
+      <div class="sidebar-group-label">Communication</div>
+      <a class="nav-item" data-page="chatbot" href="chatbot.html"><svg class="icon"><use href="#icon-message-circle"/></svg><span>Chatbot</span></a>
+      <a class="nav-item" data-page="notifications" href="notifications.html"><svg class="icon"><use href="#icon-bell"/></svg><span>Notifications</span></a>
+      <div class="sidebar-group-label">Administration</div>
+      <a class="nav-item" data-page="agent-studio" href="agent-studio.html"><svg class="icon"><use href="#icon-cpu"/></svg><span>Agent Studio</span></a>
+      <a class="nav-item" data-page="audit" href="audit.html"><svg class="icon"><use href="#icon-shield"/></svg><span>Audit Log</span></a>
+      <a class="nav-item" data-page="settings" href="settings.html"><svg class="icon"><use href="#icon-settings"/></svg><span>Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" id="sidebarCollapseBtn" style="width:100%;"><svg class="icon icon-directional"><use href="#icon-chevrons-left"/></svg><span>Collapse</span></button>
+    </div>
+  </aside>
+
+  <!-- ============ HEADER ============ -->
+  <header class="app-header">
+    <button class="header-toggle" id="sidebarMobileToggle" aria-label="Toggle sidebar"><svg class="icon"><use href="#icon-menu"/></svg></button>
+    <label class="header-search">
+      <svg class="icon icon-muted"><use href="#icon-search"/></svg>
+      <input type="text" placeholder="Search projects, tasks, clients…" id="globalSearchInput">
+      <kbd>/</kbd>
+    </label>
+    <div class="header-spacer"></div>
+    <div class="header-actions">
+      <button class="icon-button" id="themeToggleBtn" aria-label="Toggle theme"><svg class="icon" id="themeIcon"><use href="#icon-moon"/></svg></button>
+      <button class="icon-button" id="langToggleBtn" aria-label="Toggle language"><svg class="icon"><use href="#icon-globe"/></svg></button>
+      <button class="icon-button" id="notifBtn" aria-label="Notifications"><svg class="icon"><use href="#icon-bell"/></svg><span class="notif-dot"></span></button>
+      <button class="user-menu-trigger" id="userMenuBtn"><div class="avatar avatar-sm">RB</div><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-down"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="app-main">
+    <div class="flex items-center justify-between" style="margin-bottom: var(--space-6);">
+      <div>
+        <h1>Workflows</h1>
+        <p class="text-slate" style="margin-top:4px;">18 active · 1 at risk · 1 blocked</p>
+      </div>
+      <div class="flex gap-3">
+        <a class="btn btn-secondary" href="templates.html">
+          <svg class="icon icon-sm"><use href="#icon-copy"/></svg>
+          Templates
+        </a>
+        <a class="btn btn-primary" href="workflow-designer.html">
+          <svg class="icon icon-sm"><use href="#icon-plus"/></svg>
+          New Workflow
+        </a>
+      </div>
+    </div>
+
+    <!-- KPI ROW -->
+    <div class="grid grid-4" style="margin-bottom: var(--space-6);">
+      <div class="card card-rail status-running">
+        <div class="text-sm text-slate">Active Workflows</div>
+        <div style="font-family:var(--font-display); font-size:var(--text-3xl); margin-top:var(--space-2);">18</div>
+        <div class="badge status-success" style="margin-top:var(--space-3);">+4 this week</div>
+      </div>
+      <div class="card card-rail status-neutral">
+        <div class="text-sm text-slate">Avg Cycle Time</div>
+        <div style="font-family:var(--font-display); font-size:var(--text-3xl); margin-top:var(--space-2);" class="mono">3.2d</div>
+        <div class="badge status-success" style="margin-top:var(--space-3);">-0.4d vs last month</div>
+      </div>
+      <div class="card card-rail status-success">
+        <div class="text-sm text-slate">Completion Rate</div>
+        <div style="font-family:var(--font-display); font-size:var(--text-3xl); margin-top:var(--space-2);">94%</div>
+        <div class="badge" style="margin-top:var(--space-3);">142 completed MTD</div>
+      </div>
+      <div class="card card-rail status-danger">
+        <div class="text-sm text-slate">Blocked</div>
+        <div style="font-family:var(--font-display); font-size:var(--text-3xl); margin-top:var(--space-2);">1</div>
+        <div class="badge status-danger" style="margin-top:var(--space-3);">Needs attention</div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <label class="filter-search">
+        <svg class="icon icon-sm icon-muted"><use href="#icon-search"/></svg>
+        <input type="text" placeholder="Filter by workflow or client…" id="wfFilterInput">
+      </label>
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="running">Running</button>
+      <button class="filter-chip" data-filter="warning">At risk</button>
+      <button class="filter-chip" data-filter="danger">Blocked</button>
+      <button class="filter-chip" data-filter="success">Complete</button>
+    </div>
+
+    <!-- WORKFLOW INSTANCE LIST -->
+    <div id="wfList">
+
+      <div class="card card-rail status-running wf-card" data-status="running" data-name="Client Onboarding — Acme Retail" data-wf="wf1">
+        <div class="wf-card-top">
+          <div>
+            <div class="card-title">Client Onboarding</div>
+            <div class="card-subtitle">Acme Retail</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="badge status-running">Running</span>
+            <span class="tag">WF-2201</span>
+          </div>
+        </div>
+        <div class="wf-stepper">
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Intake</div></div>
+          <div class="wf-connector is-done"></div>
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Contract</div></div>
+          <div class="wf-connector is-done"></div>
+          <div class="wf-step is-current"><div class="wf-step-dot">3</div><div class="wf-step-label">Kickoff Call</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step"><div class="wf-step-dot">4</div><div class="wf-step-label">Setup</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step"><div class="wf-step-dot">5</div><div class="wf-step-label">Go-Live</div></div>
+        </div>
+        <div class="wf-card-footer">
+          <div class="flex items-center gap-3 text-sm text-slate">
+            <div class="avatar avatar-sm">PK</div>
+            <span>Started Jul 14 · Next: Kickoff call with client stakeholders</span>
+          </div>
+          <button class="btn btn-secondary btn-sm wf-view-btn">
+            View details <svg class="icon icon-sm"><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="card card-rail status-danger wf-card" data-status="danger" data-name="Vendor Onboarding — Meridian Supply" data-wf="wf2">
+        <div class="wf-card-top">
+          <div>
+            <div class="card-title">Vendor Onboarding</div>
+            <div class="card-subtitle">Meridian Supply</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="badge status-danger">Blocked</span>
+            <span class="tag">WF-2188</span>
+          </div>
+        </div>
+        <div class="wf-stepper">
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Application</div></div>
+          <div class="wf-connector is-done"></div>
+          <div class="wf-step is-current is-danger"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-alert-triangle"/></svg></div><div class="wf-step-label">Compliance Check</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step"><div class="wf-step-dot">3</div><div class="wf-step-label">Contract</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step"><div class="wf-step-dot">4</div><div class="wf-step-label">Sync to ERP</div></div>
+        </div>
+        <div class="wf-card-footer">
+          <div class="flex items-center gap-3 text-sm text-slate">
+            <div class="avatar avatar-sm">DN</div>
+            <span>Started Jul 10 · Blocked: missing insurance certificate</span>
+          </div>
+          <button class="btn btn-secondary btn-sm wf-view-btn">
+            View details <svg class="icon icon-sm"><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="card card-rail status-warning wf-card" data-status="warning" data-name="Invoice Approval — Northwind Logistics" data-wf="wf3">
+        <div class="wf-card-top">
+          <div>
+            <div class="card-title">Invoice Approval</div>
+            <div class="card-subtitle">Northwind Logistics</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="badge status-warning">At risk</span>
+            <span class="tag">WF-2214</span>
+          </div>
+        </div>
+        <div class="wf-stepper">
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Submitted</div></div>
+          <div class="wf-connector is-done"></div>
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Manager Review</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step is-current is-warning"><div class="wf-step-dot">3</div><div class="wf-step-label">Finance Review</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step"><div class="wf-step-dot">4</div><div class="wf-step-label">Payment</div></div>
+        </div>
+        <div class="wf-card-footer">
+          <div class="flex items-center gap-3 text-sm text-slate">
+            <div class="avatar avatar-sm">SM</div>
+            <span>Started Jul 16 · Awaiting finance sign-off, 2 days overdue</span>
+          </div>
+          <button class="btn btn-secondary btn-sm wf-view-btn">
+            View details <svg class="icon icon-sm"><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="card card-rail status-running wf-card" data-status="running" data-name="Project Kickoff — Acme Retail" data-wf="wf4">
+        <div class="wf-card-top">
+          <div>
+            <div class="card-title">Project Kickoff</div>
+            <div class="card-subtitle">Acme Retail</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="badge status-running">Running</span>
+            <span class="tag">WF-2219</span>
+          </div>
+        </div>
+        <div class="wf-stepper">
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Discovery</div></div>
+          <div class="wf-connector is-done"></div>
+          <div class="wf-step is-current"><div class="wf-step-dot">2</div><div class="wf-step-label">Resource Allocation</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step"><div class="wf-step-dot">3</div><div class="wf-step-label">Kickoff Meeting</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step"><div class="wf-step-dot">4</div><div class="wf-step-label">Charter Sign-off</div></div>
+        </div>
+        <div class="wf-card-footer">
+          <div class="flex items-center gap-3 text-sm text-slate">
+            <div class="avatar avatar-sm">JT</div>
+            <span>Started Jul 17 · Next: assign delivery team</span>
+          </div>
+          <button class="btn btn-secondary btn-sm wf-view-btn">
+            View details <svg class="icon icon-sm"><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="card card-rail status-running wf-card" data-status="running" data-name="Vendor Sync — Falcon Industries" data-wf="wf5">
+        <div class="wf-card-top">
+          <div>
+            <div class="card-title">Vendor Sync</div>
+            <div class="card-subtitle">Falcon Industries</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="badge status-running">Running</span>
+            <span class="tag">WF-2223</span>
+          </div>
+        </div>
+        <div class="wf-stepper">
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Request</div></div>
+          <div class="wf-connector is-done"></div>
+          <div class="wf-step is-current"><div class="wf-step-dot">2</div><div class="wf-step-label">Validate</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step"><div class="wf-step-dot">3</div><div class="wf-step-label">Sync</div></div>
+          <div class="wf-connector"></div>
+          <div class="wf-step"><div class="wf-step-dot">4</div><div class="wf-step-label">Confirm</div></div>
+        </div>
+        <div class="wf-card-footer">
+          <div class="flex items-center gap-3 text-sm text-slate">
+            <div class="avatar avatar-sm">PK</div>
+            <span>Started Jul 18 · Next: automated field validation</span>
+          </div>
+          <button class="btn btn-secondary btn-sm wf-view-btn">
+            View details <svg class="icon icon-sm"><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="card card-rail status-success wf-card" data-status="success" data-name="Contract Renewal — Solace Wellness" data-wf="wf6">
+        <div class="wf-card-top">
+          <div>
+            <div class="card-title">Contract Renewal</div>
+            <div class="card-subtitle">Solace Wellness</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="badge status-success">Complete</span>
+            <span class="tag">WF-2179</span>
+          </div>
+        </div>
+        <div class="wf-stepper">
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Draft</div></div>
+          <div class="wf-connector is-done"></div>
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Legal Review</div></div>
+          <div class="wf-connector is-done"></div>
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Client Signature</div></div>
+          <div class="wf-connector is-done"></div>
+          <div class="wf-step is-done"><div class="wf-step-dot"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="wf-step-label">Archived</div></div>
+        </div>
+        <div class="wf-card-footer">
+          <div class="flex items-center gap-3 text-sm text-slate">
+            <div class="avatar avatar-sm">RB</div>
+            <span>Closed Jul 15 · Renewed for 12 months</span>
+          </div>
+          <button class="btn btn-secondary btn-sm wf-view-btn">
+            View details <svg class="icon icon-sm"><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- EMPTY STATE (hidden unless a filter/search yields no matches) -->
+    <div class="empty-state" id="wfEmptyState" style="display:none;">
+      <svg class="icon"><use href="#icon-git-branch"/></svg>
+      <h4>No workflows match</h4>
+      <p>Try a different filter or search term, or start a new workflow from a template.</p>
+      <a class="btn btn-primary" href="templates.html">
+        <svg class="icon icon-sm"><use href="#icon-copy"/></svg>
+        Browse Templates
+      </a>
+    </div>
+  </main>
+</div>
+
+<!-- WORKFLOW DETAIL DRAWER -->
+<div class="wf-drawer-backdrop" id="wfDrawerBackdrop"></div>
+<aside class="drawer wf-drawer" id="wfDrawer" aria-hidden="true">
+  <div class="modal-header">
+    <div>
+      <div class="card-title" id="wfDrawerTitle">Workflow</div>
+      <div class="card-subtitle" id="wfDrawerSubtitle">—</div>
+    </div>
+    <button class="icon-button" id="wfDrawerCloseBtn" aria-label="Close"><svg class="icon"><use href="#icon-x"/></svg></button>
+  </div>
+  <div class="flex items-center gap-3" style="margin-bottom: var(--space-5);">
+    <span class="badge" id="wfDrawerBadge">Running</span>
+    <span class="tag" id="wfDrawerId">WF-0000</span>
+  </div>
+  <div class="card-title" style="font-size:var(--text-base); margin-bottom:var(--space-2);">Stage timeline</div>
+  <div id="wfDrawerTimeline"></div>
+  <div class="modal-footer">
+    <button class="btn btn-danger" id="wfDrawerCancelBtn">Cancel Workflow</button>
+    <button class="btn btn-primary" id="wfDrawerAdvanceBtn">Advance Stage</button>
+  </div>
+</aside>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/components.js"></script>
+<script src="../js/charts.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (function () {
+    // Workflow detail content keyed by data-wf, used to populate the drawer.
+    // Kept local to this page for now — will move to js/mock-data.js in Pass 25.
+    const WF_DETAILS = {
+      wf1: {
+        title: "Client Onboarding", subtitle: "Acme Retail", badge: "status-running", badgeLabel: "Running", id: "WF-2201",
+        stages: [
+          { label: "Intake", meta: "Completed Jul 14, 9:02 AM · Priya K.", state: "is-done" },
+          { label: "Contract", meta: "Completed Jul 15, 3:40 PM · Priya K.", state: "is-done" },
+          { label: "Kickoff Call", meta: "In progress · scheduled Jul 21, 10:00 AM", state: "is-current" },
+          { label: "Setup", meta: "Not started", state: "" },
+          { label: "Go-Live", meta: "Not started", state: "" }
+        ]
+      },
+      wf2: {
+        title: "Vendor Onboarding", subtitle: "Meridian Supply", badge: "status-danger", badgeLabel: "Blocked", id: "WF-2188",
+        stages: [
+          { label: "Application", meta: "Completed Jul 10, 11:15 AM · Dinesh N.", state: "is-done" },
+          { label: "Compliance Check", meta: "Blocked · missing insurance certificate since Jul 12", state: "is-current" },
+          { label: "Contract", meta: "Not started", state: "" },
+          { label: "Sync to ERP", meta: "Not started", state: "" }
+        ]
+      },
+      wf3: {
+        title: "Invoice Approval", subtitle: "Northwind Logistics", badge: "status-warning", badgeLabel: "At risk", id: "WF-2214",
+        stages: [
+          { label: "Submitted", meta: "Completed Jul 16, 8:30 AM · System", state: "is-done" },
+          { label: "Manager Review", meta: "Completed Jul 16, 4:12 PM · Sara M.", state: "is-done" },
+          { label: "Finance Review", meta: "In progress · 2 days overdue", state: "is-current" },
+          { label: "Payment", meta: "Not started", state: "" }
+        ]
+      },
+      wf4: {
+        title: "Project Kickoff", subtitle: "Acme Retail", badge: "status-running", badgeLabel: "Running", id: "WF-2219",
+        stages: [
+          { label: "Discovery", meta: "Completed Jul 17, 1:00 PM · Jamie T.", state: "is-done" },
+          { label: "Resource Allocation", meta: "In progress · assigning delivery team", state: "is-current" },
+          { label: "Kickoff Meeting", meta: "Not started", state: "" },
+          { label: "Charter Sign-off", meta: "Not started", state: "" }
+        ]
+      },
+      wf5: {
+        title: "Vendor Sync", subtitle: "Falcon Industries", badge: "status-running", badgeLabel: "Running", id: "WF-2223",
+        stages: [
+          { label: "Request", meta: "Completed Jul 18, 7:45 AM · System", state: "is-done" },
+          { label: "Validate", meta: "In progress · automated field validation", state: "is-current" },
+          { label: "Sync", meta: "Not started", state: "" },
+          { label: "Confirm", meta: "Not started", state: "" }
+        ]
+      },
+      wf6: {
+        title: "Contract Renewal", subtitle: "Solace Wellness", badge: "status-success", badgeLabel: "Complete", id: "WF-2179",
+        stages: [
+          { label: "Draft", meta: "Completed Jul 11 · Rajan B.", state: "is-done" },
+          { label: "Legal Review", meta: "Completed Jul 12 · Rajan B.", state: "is-done" },
+          { label: "Client Signature", meta: "Completed Jul 14 · Client", state: "is-done" },
+          { label: "Archived", meta: "Completed Jul 15 · System", state: "is-done" }
+        ]
+      }
+    };
+
+    const drawer = document.getElementById("wfDrawer");
+    const backdrop = document.getElementById("wfDrawerBackdrop");
+
+    function openDrawer(wfId) {
+      const data = WF_DETAILS[wfId];
+      if (!data) return;
+      document.getElementById("wfDrawerTitle").textContent = data.title;
+      document.getElementById("wfDrawerSubtitle").textContent = data.subtitle;
+      const badge = document.getElementById("wfDrawerBadge");
+      badge.className = "badge " + data.badge;
+      badge.textContent = data.badgeLabel;
+      document.getElementById("wfDrawerId").textContent = data.id;
+      document.getElementById("wfDrawerTimeline").innerHTML = data.stages.map(s => `
+        <div class="wf-timeline-item ${s.state}">
+          <div class="wf-timeline-dot"></div>
+          <div>
+            <div style="font-size:var(--text-sm); font-weight:500;">${s.label}</div>
+            <div class="text-xs text-slate" style="margin-top:2px;">${s.meta}</div>
+          </div>
+        </div>
+      `).join("");
+      drawer.classList.add("open");
+      drawer.setAttribute("aria-hidden", "false");
+      backdrop.classList.add("open");
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove("open");
+      drawer.setAttribute("aria-hidden", "true");
+      backdrop.classList.remove("open");
+    }
+
+    document.querySelectorAll(".wf-view-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const card = btn.closest(".wf-card");
+        if (card) openDrawer(card.dataset.wf);
+      });
+    });
+    document.getElementById("wfDrawerCloseBtn").addEventListener("click", closeDrawer);
+    backdrop.addEventListener("click", closeDrawer);
+
+    document.getElementById("wfDrawerAdvanceBtn").addEventListener("click", () => {
+      if (window.ServiceOSToast) window.ServiceOSToast({ title: "Advance Stage", message: "This is a prototype — no stage was advanced.", status: "running" });
+    });
+    document.getElementById("wfDrawerCancelBtn").addEventListener("click", () => {
+      if (window.ServiceOSToast) window.ServiceOSToast({ title: "Cancel Workflow", message: "This is a prototype — no workflow was cancelled.", status: "danger" });
+    });
+
+    // Status filter chips
+    const chips = document.querySelectorAll(".filter-chip");
+    const emptyState = document.getElementById("wfEmptyState");
+    function applyFilters() {
+      const activeChip = document.querySelector(".filter-chip.active");
+      const filter = activeChip ? activeChip.dataset.filter : "all";
+      const q = document.getElementById("wfFilterInput").value.trim().toLowerCase();
+      let visibleCount = 0;
+      document.querySelectorAll("#wfList > [data-status]").forEach(card => {
+        const matchesFilter = filter === "all" || card.dataset.status === filter;
+        const matchesQuery = !q || card.dataset.name.toLowerCase().includes(q);
+        const show = matchesFilter && matchesQuery;
+        card.style.display = show ? "" : "none";
+        if (show) visibleCount++;
+      });
+      emptyState.style.display = visibleCount === 0 ? "flex" : "none";
+    }
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        chips.forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        applyFilters();
+      });
+    });
+    document.getElementById("wfFilterInput").addEventListener("input", applyFilters);
+  })();
+</script>
+
+<!-- Icon sprite -->
+<svg style="display:none">
+  <defs>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></symbol>
+    <symbol id="icon-check-square" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
+    <symbol id="icon-git-branch" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/><circle cx="18" cy="6" r="3"/></symbol>
+    <symbol id="icon-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-truck" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+    <symbol id="icon-briefcase" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+    <symbol id="icon-bar-chart" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></symbol>
+    <symbol id="icon-trending-up" viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></symbol>
+    <symbol id="icon-message-circle" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="icon-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></symbol>
+    <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="icon-chevrons-left" viewBox="0 0 24 24"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="icon-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="icon-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  </defs>
+</svg>
+</body>
+</html>

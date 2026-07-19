@@ -14,9 +14,9 @@ Legend: ✅ done · ⬜ not started
 | 5 | `pages/dashboard.html` | Executive dashboard — KPIs, charts, recent activity, calendar, notifications. | ✅ |
 | 6 | `pages/projects.html` | Project list. | ✅ |
 | 7 | `pages/project-details.html` | Project workspace. | ⬜ |
-| 8 | `pages/workflow.html` | Workflow visualization. | ⬜ |
-| 9 | `pages/workflow-designer.html` | Drag-and-drop workflow designer. | ⬜ |
-| 10 | `pages/templates.html` | Workflow templates. | ⬜ |
+| 8 | `pages/workflow.html` | Workflow visualization. | ✅ |
+| 9 | `pages/workflow-designer.html` | Drag-and-drop workflow designer. | ✅ |
+| 10 | `pages/templates.html` | Workflow templates. | ✅ |
 | 11 | `pages/tasks.html` | Task management — kanban, calendar, list views. | ⬜ |
 | 12 | `pages/documents.html` | Document center. | ⬜ |
 | 13 | `pages/users.html` | User management. | ⬜ |

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServiceOS — Workflow Designer</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  /* ---------------------------------------------------------
+     Pass 9 addition: drag-and-drop designer canvas.
+     Reads only tokens from style.css — consistent with the
+     theming contract in design-spec.md. Candidate for
+     promotion into style.css once the pattern is reused
+     elsewhere (e.g. templates.html in Pass 10).
+     --------------------------------------------------------- */
+  .designer-layout { display: grid; grid-template-columns: 220px 1fr 280px; gap: var(--space-5); align-items: start; }
+  @media (max-width: 1023px) { .designer-layout { grid-template-columns: 1fr; } }
+
+  .designer-toolbar { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); flex-wrap: wrap; }
+  .designer-toolbar .input { max-width: 320px; font-family: var(--font-display); font-weight: 500; }
+
+  .designer-panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); }
+  .designer-panel-title { font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--space-3); display: flex; align-items: center; justify-content: space-between; }
+
+  .palette-item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-sm); margin-bottom: var(--space-2); cursor: grab; background: var(--color-surface); transition: border-color var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease); }
+  .palette-item:hover { border-color: var(--color-signal); background: var(--color-signal-soft); }
+  .palette-item:active { cursor: grabbing; }
+  .palette-item .icon-wrap { width: 28px; height: 28px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .palette-item-label { font-size: var(--text-sm); font-weight: 500; }
+
+  .designer-canvas-wrap { border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: auto; background: var(--color-surface); height: 560px; }
+  .designer-canvas {
+    position: relative; min-width: 1500px; min-height: 520px; height: 100%;
+    background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  .designer-canvas.is-linking { cursor: crosshair; }
+  .designer-connections { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .designer-connections .designer-conn-hit { pointer-events: stroke; cursor: pointer; }
+
+  .dn-node {
+    position: absolute; width: 180px; background: var(--color-surface); border: 1px solid var(--color-border);
+    border-inline-start: 3px solid var(--status-neutral); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+    padding: var(--space-3); cursor: grab; user-select: none; z-index: 2;
+  }
+  .dn-node:active { cursor: grabbing; }
+  .dn-node.selected { box-shadow: 0 0 0 2px var(--color-signal); }
+  .dn-node.is-linking-source { box-shadow: 0 0 0 2px var(--status-running); }
+  .dn-node.is-testing { box-shadow: 0 0 0 3px var(--status-running-soft), 0 0 0 1px var(--status-running); }
+  .dn-node[data-type="trigger"] { border-inline-start-color: var(--status-running); }
+  .dn-node[data-type="approval"] { border-inline-start-color: var(--status-warning); }
+  .dn-node[data-type="condition"] { border-inline-start-color: var(--color-signal); }
+  .dn-node[data-type="end"] { border-inline-start-color: var(--status-success); }
+  .dn-node-head { display: flex; align-items: center; gap: var(--space-2); }
+  .dn-node-icon { width: 22px; height: 22px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--color-bg); }
+  .dn-node-title { font-size: var(--text-sm); font-weight: 600; line-height: 1.3; }
+  .dn-node-type { font-size: var(--text-xs); color: var(--color-slate-soft); margin-top: 2px; text-transform: capitalize; }
+  .dn-handle {
+    position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--color-surface); border: 2px solid var(--color-slate-soft); transform: translateY(-50%);
+    cursor: crosshair; z-index: 3;
+  }
+  .dn-handle-out { inset-inline-end: -7px; }
+  .dn-handle-in { inset-inline-start: -7px; }
+  .dn-handle:hover { border-color: var(--color-signal); background: var(--color-signal-soft); }
+  .dn-node-delete {
+    position: absolute; top: -8px; inset-inline-end: -8px; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--status-danger); color: #fff; display: none; align-items: center; justify-content: center;
+    cursor: pointer; border: 2px solid var(--color-surface); z-index: 4;
+  }
+  .dn-node:hover .dn-node-delete { display: flex; }
+  .designer-conn-label { font-family: var(--font-mono); font-size: 10px; fill: var(--color-slate); }
+
+  .props-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-6) var(--space-3); color: var(--color-slate); }
+  .props-empty .icon { width: 32px; height: 32px; color: var(--color-slate-soft); margin-bottom: var(--space-3); }
+  .props-empty p { font-size: var(--text-sm); }
+</style>
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-brand"><span class="dot"></span><span>ServiceOS</span></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group-label">Overview</div>
+      <a class="nav-item" data-page="dashboard" href="dashboard.html"><svg class="icon"><use href="#icon-grid"/></svg><span>Dashboard</span></a>
+      <div class="sidebar-group-label">Work</div>
+      <a class="nav-item" data-page="projects" href="projects.html"><svg class="icon"><use href="#icon-folder"/></svg><span>Projects</span></a>
+      <a class="nav-item" data-page="tasks" href="tasks.html"><svg class="icon"><use href="#icon-check-square"/></svg><span>Tasks</span></a>
+      <a class="nav-item" data-page="documents" href="documents.html"><svg class="icon"><use href="#icon-file"/></svg><span>Documents</span></a>
+      <div class="sidebar-group-label">Workflow</div>
+      <a class="nav-item" data-page="workflow" href="workflow.html"><svg class="icon"><use href="#icon-git-branch"/></svg><span>Workflows</span></a>
+      <a class="nav-item" data-page="workflow-designer" href="workflow-designer.html"><svg class="icon"><use href="#icon-layout"/></svg><span>Workflow Designer</span></a>
+      <a class="nav-item" data-page="templates" href="templates.html"><svg class="icon"><use href="#icon-copy"/></svg><span>Templates</span></a>
+      <div class="sidebar-group-label">People</div>
+      <a class="nav-item" data-page="users" href="users.html"><svg class="icon"><use href="#icon-users"/></svg><span>Users</span></a>
+      <a class="nav-item" data-page="vendors" href="vendors.html"><svg class="icon"><use href="#icon-truck"/></svg><span>Vendors</span></a>
+      <a class="nav-item" data-page="clients" href="clients.html"><svg class="icon"><use href="#icon-briefcase"/></svg><span>Clients</span></a>
+      <div class="sidebar-group-label">Insights</div>
+      <a class="nav-item" data-page="reports" href="reports.html"><svg class="icon"><use href="#icon-bar-chart"/></svg><span>Reports</span></a>
+      <a class="nav-item" data-page="analytics" href="analytics.html"><svg class="icon"><use href="#icon-trending-up"/></svg><span>Analytics</span></a>
+      <div class="sidebar-group-label">Communication</div>
+      <a class="nav-item" data-page="chatbot" href="chatbot.html"><svg class="icon"><use href="#icon-message-circle"/></svg><span>Chatbot</span></a>
+      <a class="nav-item" data-page="notifications" href="notifications.html"><svg class="icon"><use href="#icon-bell"/></svg><span>Notifications</span></a>
+      <div class="sidebar-group-label">Administration</div>
+      <a class="nav-item" data-page="agent-studio" href="agent-studio.html"><svg class="icon"><use href="#icon-cpu"/></svg><span>Agent Studio</span></a>
+      <a class="nav-item" data-page="audit" href="audit.html"><svg class="icon"><use href="#icon-shield"/></svg><span>Audit Log</span></a>
+      <a class="nav-item" data-page="settings" href="settings.html"><svg class="icon"><use href="#icon-settings"/></svg><span>Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" id="sidebarCollapseBtn" style="width:100%;"><svg class="icon icon-directional"><use href="#icon-chevrons-left"/></svg><span>Collapse</span></button>
+    </div>
+  </aside>
+
+  <!-- ============ HEADER ============ -->
+  <header class="app-header">
+    <button class="header-toggle" id="sidebarMobileToggle" aria-label="Toggle sidebar"><svg class="icon"><use href="#icon-menu"/></svg></button>
+    <label class="header-search">
+      <svg class="icon icon-muted"><use href="#icon-search"/></svg>
+      <input type="text" placeholder="Search projects, tasks, clients…" id="globalSearchInput">
+      <kbd>/</kbd>
+    </label>
+    <div class="header-spacer"></div>
+    <div class="header-actions">
+      <button class="icon-button" id="themeToggleBtn" aria-label="Toggle theme"><svg class="icon" id="themeIcon"><use href="#icon-moon"/></svg></button>
+      <button class="icon-button" id="langToggleBtn" aria-label="Toggle language"><svg class="icon"><use href="#icon-globe"/></svg></button>
+      <button class="icon-button" id="notifBtn" aria-label="Notifications"><svg class="icon"><use href="#icon-bell"/></svg><span class="notif-dot"></span></button>
+      <button class="user-menu-trigger" id="userMenuBtn"><div class="avatar avatar-sm">RB</div><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-down"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="app-main">
+    <div class="flex items-center justify-between" style="margin-bottom: var(--space-5);">
+      <div>
+        <h1>Workflow Designer</h1>
+        <p class="text-slate" style="margin-top:4px;">Drag steps from the palette onto the canvas, then connect them.</p>
+      </div>
+      <div class="flex gap-3">
+        <a class="btn btn-secondary" href="workflow.html">
+          <svg class="icon icon-sm"><use href="#icon-chevrons-left"/></svg>
+          Back to Workflows
+        </a>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="designer-toolbar">
+      <input type="text" class="input" id="designerNameInput" value="Client Onboarding — Draft">
+      <span class="badge" id="designerNodeCount">8 steps</span>
+      <div class="header-spacer"></div>
+      <button class="btn btn-ghost" id="clearCanvasBtn">
+        <svg class="icon icon-sm"><use href="#icon-trash"/></svg>
+        Clear Canvas
+      </button>
+      <button class="btn btn-secondary" id="testRunBtn">
+        <svg class="icon icon-sm"><use href="#icon-play"/></svg>
+        Test Run
+      </button>
+      <button class="btn btn-primary" id="saveWorkflowBtn">
+        <svg class="icon icon-sm"><use href="#icon-check-square"/></svg>
+        Save Workflow
+      </button>
+    </div>
+
+    <div class="designer-layout">
+
+      <!-- PALETTE -->
+      <div class="designer-panel">
+        <div class="designer-panel-title">Steps</div>
+        <div class="palette-item" draggable="true" data-type="trigger" data-icon="zap">
+          <div class="icon-wrap" style="background:var(--status-running-soft);"><svg class="icon icon-sm" style="color:var(--status-running);"><use href="#icon-zap"/></svg></div>
+          <span class="palette-item-label">Trigger</span>
+        </div>
+        <div class="palette-item" draggable="true" data-type="task" data-icon="check-square">
+          <div class="icon-wrap" style="background:var(--color-bg);"><svg class="icon icon-sm icon-muted"><use href="#icon-check-square"/></svg></div>
+          <span class="palette-item-label">Task</span>
+        </div>
+        <div class="palette-item" draggable="true" data-type="approval" data-icon="users">
+          <div class="icon-wrap" style="background:var(--status-warning-soft);"><svg class="icon icon-sm" style="color:var(--status-warning);"><use href="#icon-users"/></svg></div>
+          <span class="palette-item-label">Approval</span>
+        </div>
+        <div class="palette-item" draggable="true" data-type="condition" data-icon="git-branch">
+          <div class="icon-wrap" style="background:var(--color-signal-soft);"><svg class="icon icon-sm" style="color:var(--color-signal);"><use href="#icon-git-branch"/></svg></div>
+          <span class="palette-item-label">Condition</span>
+        </div>
+        <div class="palette-item" draggable="true" data-type="notification" data-icon="bell">
+          <div class="icon-wrap" style="background:var(--color-bg);"><svg class="icon icon-sm icon-muted"><use href="#icon-bell"/></svg></div>
+          <span class="palette-item-label">Notification</span>
+        </div>
+        <div class="palette-item" draggable="true" data-type="integration" data-icon="refresh-cw">
+          <div class="icon-wrap" style="background:var(--color-bg);"><svg class="icon icon-sm icon-muted"><use href="#icon-refresh-cw"/></svg></div>
+          <span class="palette-item-label">Integration</span>
+        </div>
+        <div class="palette-item" draggable="true" data-type="delay" data-icon="clock">
+          <div class="icon-wrap" style="background:var(--color-bg);"><svg class="icon icon-sm icon-muted"><use href="#icon-clock"/></svg></div>
+          <span class="palette-item-label">Delay</span>
+        </div>
+        <div class="palette-item" draggable="true" data-type="end" data-icon="flag">
+          <div class="icon-wrap" style="background:var(--status-success-soft);"><svg class="icon icon-sm" style="color:var(--status-success);"><use href="#icon-flag"/></svg></div>
+          <span class="palette-item-label">End</span>
+        </div>
+        <p class="text-xs text-slate" style="margin-top:var(--space-3);">Drag a step onto the canvas, or click it to drop one in the default spot.</p>
+      </div>
+
+      <!-- CANVAS -->
+      <div class="designer-canvas-wrap">
+        <div class="designer-canvas" id="designerCanvas">
+          <svg class="designer-connections" id="designerConnections"></svg>
+          <!-- Nodes injected by JS from INITIAL_NODES so palette-created nodes share one code path -->
+        </div>
+      </div>
+
+      <!-- PROPERTIES -->
+      <div class="designer-panel" id="propsPanel">
+        <div class="designer-panel-title">Properties</div>
+        <div class="props-empty" id="propsEmpty">
+          <svg class="icon"><use href="#icon-layout"/></svg>
+          <p>Select a step to edit it, or drag one in from the palette.</p>
+        </div>
+        <div id="propsForm" style="display:none;">
+          <div class="field">
+            <label class="field-label">Step name</label>
+            <input type="text" class="input" id="propName">
+          </div>
+          <div class="field">
+            <label class="field-label">Step type</label>
+            <select class="select" id="propType">
+              <option value="trigger">Trigger</option>
+              <option value="task">Task</option>
+              <option value="approval">Approval</option>
+              <option value="condition">Condition</option>
+              <option value="notification">Notification</option>
+              <option value="integration">Integration</option>
+              <option value="delay">Delay</option>
+              <option value="end">End</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Assigned to</label>
+            <input type="text" class="input" id="propAssignee" placeholder="Unassigned">
+          </div>
+          <div class="field">
+            <label class="field-label">Notes</label>
+            <textarea class="textarea" id="propNotes" placeholder="What happens in this step…"></textarea>
+          </div>
+          <button class="btn btn-danger" id="propDeleteBtn" style="width:100%;">
+            <svg class="icon icon-sm"><use href="#icon-trash"/></svg>
+            Delete Step
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/components.js"></script>
+<script src="../js/charts.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (function () {
+    "use strict";
+
+    const ICONS = {
+      trigger: "zap", task: "check-square", approval: "users", condition: "git-branch",
+      notification: "bell", integration: "refresh-cw", delay: "clock", end: "flag"
+    };
+
+    // Pre-built sample workflow so the canvas isn't empty on first load —
+    // demonstrates a full trigger → task → approval → branch → two ends chain.
+    let nodes = [
+      { id: "n1", type: "trigger", name: "New Client Signed", left: 40, top: 220, assignee: "", notes: "Fires when a signed contract lands in the CRM." },
+      { id: "n2", type: "task", name: "Create Onboarding Checklist", left: 280, top: 220, assignee: "Priya K.", notes: "" },
+      { id: "n3", type: "approval", name: "Manager Approval", left: 520, top: 220, assignee: "Rukmani B.", notes: "" },
+      { id: "n4", type: "condition", name: "Approved?", left: 760, top: 220, assignee: "", notes: "" },
+      { id: "n5", type: "task", name: "Provision Accounts", left: 1000, top: 90, assignee: "Jamie T.", notes: "" },
+      { id: "n6", type: "notification", name: "Notify Client of Delay", left: 1000, top: 350, assignee: "", notes: "" },
+      { id: "n7", type: "end", name: "Onboarding Complete", left: 1240, top: 90, assignee: "", notes: "" },
+      { id: "n8", type: "end", name: "Escalated to Ops", left: 1240, top: 350, assignee: "", notes: "" }
+    ];
+    let connections = [
+      { from: "n1", to: "n2" },
+      { from: "n2", to: "n3" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5", label: "Yes", color: "var(--status-success)" },
+      { from: "n4", to: "n6", label: "No", color: "var(--status-danger)" },
+      { from: "n5", to: "n7" },
+      { from: "n6", to: "n8" }
+    ];
+
+    let nodeSeq = nodes.length;
+    let selectedId = null;
+    let linkingFrom = null;
+
+    const canvas = document.getElementById("designerCanvas");
+    const svg = document.getElementById("designerConnections");
+    const nodeCountBadge = document.getElementById("designerNodeCount");
+
+    function toast(title, message, status) {
+      if (window.ServiceOSToast) window.ServiceOSToast({ title, message, status: status || "running" });
+    }
+
+    /* ---------- Rendering ---------- */
+    function renderAll() {
+      canvas.querySelectorAll(".dn-node").forEach(el => el.remove());
+      nodes.forEach(renderNode);
+      renderConnections();
+      nodeCountBadge.textContent = nodes.length + " step" + (nodes.length === 1 ? "" : "s");
+      renderProps();
+    }
+
+    function renderNode(n) {
+      const el = document.createElement("div");
+      el.className = "dn-node" + (n.id === selectedId ? " selected" : "");
+      el.id = n.id;
+      el.dataset.type = n.type;
+      el.style.left = n.left + "px";
+      el.style.top = n.top + "px";
+      el.innerHTML = `
+        <div class="dn-node-delete" title="Delete step"><svg class="icon" style="width:12px;height:12px;"><use href="#icon-x"/></svg></div>
+        <div class="dn-node-head">
+          <div class="dn-node-icon"><svg class="icon icon-sm"><use href="#icon-${ICONS[n.type]}"/></svg></div>
+          <div>
+            <div class="dn-node-title">${escapeHtml(n.name)}</div>
+            <div class="dn-node-type">${n.type}</div>
+          </div>
+        </div>
+        <div class="dn-handle dn-handle-in" title="Drag a connection here"></div>
+        <div class="dn-handle dn-handle-out" title="Drag from here to connect"></div>
+      `;
+      canvas.appendChild(el);
+
+      // Reposition by dragging the node body (not the handles or delete button).
+      el.addEventListener("mousedown", (e) => {
+        if (e.target.closest(".dn-handle") || e.target.closest(".dn-node-delete")) return;
+        e.preventDefault();
+        const startX = e.clientX, startY = e.clientY;
+        const origLeft = n.left, origTop = n.top;
+        let moved = false;
+        function onMove(ev) {
+          moved = true;
+          n.left = Math.max(0, origLeft + (ev.clientX - startX));
+          n.top = Math.max(0, origTop + (ev.clientY - startY));
+          el.style.left = n.left + "px";
+          el.style.top = n.top + "px";
+          renderConnections();
+        }
+        function onUp() {
+          document.removeEventListener("mousemove", onMove);
+          document.removeEventListener("mouseup", onUp);
+          if (!moved) selectNode(n.id);
+        }
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+      });
+
+      el.querySelector(".dn-node-delete").addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteNode(n.id);
+      });
+
+      el.querySelector(".dn-handle-out").addEventListener("mousedown", (e) => {
+        e.stopPropagation(); e.preventDefault();
+        linkingFrom = n.id;
+        canvas.classList.add("is-linking");
+        el.classList.add("is-linking-source");
+      });
+
+      el.addEventListener("mouseup", () => {
+        if (linkingFrom && linkingFrom !== n.id) {
+          const exists = connections.some(c => c.from === linkingFrom && c.to === n.id);
+          if (!exists) connections.push({ from: linkingFrom, to: n.id });
+          finishLinking();
+          renderConnections();
+        }
+      });
+    }
+
+    function finishLinking() {
+      if (linkingFrom) {
+        const src = document.getElementById(linkingFrom);
+        if (src) src.classList.remove("is-linking-source");
+      }
+      linkingFrom = null;
+      canvas.classList.remove("is-linking");
+    }
+
+    function renderConnections() {
+      const w = canvas.scrollWidth, h = canvas.scrollHeight;
+      svg.setAttribute("width", w);
+      svg.setAttribute("height", h);
+      let html = `<defs>
+        <marker id="dnArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="var(--color-slate-soft)"/>
+        </marker>
+      </defs>`;
+      connections.forEach((c, i) => {
+        const a = document.getElementById(c.from), b = document.getElementById(c.to);
+        if (!a || !b) return;
+        const x1 = a.offsetLeft + a.offsetWidth, y1 = a.offsetTop + a.offsetHeight / 2;
+        const x2 = b.offsetLeft, y2 = b.offsetTop + b.offsetHeight / 2;
+        const mx = (x1 + x2) / 2;
+        const stroke = c.color || "var(--color-border-strong)";
+        const pathD = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+        html += `<path d="${pathD}" fill="none" stroke="${stroke}" stroke-width="2" marker-end="url(#dnArrow)"/>`;
+        // Invisible wide-stroke twin on top, purely for a comfortable click target.
+        html += `<path class="designer-conn-hit" data-idx="${i}" d="${pathD}" fill="none" stroke="transparent" stroke-width="10"/>`;
+        if (c.label) {
+          html += `<rect x="${mx - 14}" y="${(y1 + y2) / 2 - 9}" width="28" height="16" rx="3" fill="var(--color-surface)" stroke="${stroke}"/>`;
+          html += `<text class="designer-conn-label" x="${mx}" y="${(y1 + y2) / 2 + 3}" text-anchor="middle">${c.label}</text>`;
+        }
+      });
+      svg.innerHTML = html;
+      svg.querySelectorAll(".designer-conn-hit").forEach(p => {
+        p.style.pointerEvents = "stroke";
+        p.style.cursor = "pointer";
+        p.addEventListener("click", () => {
+          const idx = Number(p.dataset.idx);
+          connections.splice(idx, 1);
+          renderConnections();
+          toast("Connection removed", "Click a step's out-handle to reconnect it.", "warning");
+        });
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+    }
+
+    /* ---------- Selection / properties panel ---------- */
+    function selectNode(id) {
+      selectedId = id;
+      renderAll();
+    }
+
+    function renderProps() {
+      const empty = document.getElementById("propsEmpty");
+      const form = document.getElementById("propsForm");
+      const n = nodes.find(x => x.id === selectedId);
+      if (!n) {
+        empty.style.display = "flex";
+        form.style.display = "none";
+        return;
+      }
+      empty.style.display = "none";
+      form.style.display = "block";
+      document.getElementById("propName").value = n.name;
+      document.getElementById("propType").value = n.type;
+      document.getElementById("propAssignee").value = n.assignee || "";
+      document.getElementById("propNotes").value = n.notes || "";
+    }
+
+    document.getElementById("propName").addEventListener("input", (e) => {
+      const n = nodes.find(x => x.id === selectedId);
+      if (!n) return;
+      n.name = e.target.value;
+      const titleEl = document.querySelector(`#${n.id} .dn-node-title`);
+      if (titleEl) titleEl.textContent = n.name;
+    });
+    document.getElementById("propType").addEventListener("change", (e) => {
+      const n = nodes.find(x => x.id === selectedId);
+      if (!n) return;
+      n.type = e.target.value;
+      renderAll();
+    });
+    document.getElementById("propAssignee").addEventListener("input", (e) => {
+      const n = nodes.find(x => x.id === selectedId);
+      if (n) n.assignee = e.target.value;
+    });
+    document.getElementById("propNotes").addEventListener("input", (e) => {
+      const n = nodes.find(x => x.id === selectedId);
+      if (n) n.notes = e.target.value;
+    });
+    document.getElementById("propDeleteBtn").addEventListener("click", () => {
+      if (selectedId) deleteNode(selectedId);
+    });
+
+    function deleteNode(id) {
+      nodes = nodes.filter(n => n.id !== id);
+      connections = connections.filter(c => c.from !== id && c.to !== id);
+      if (selectedId === id) selectedId = null;
+      renderAll();
+    }
+
+    /* ---------- Canvas click (deselect / cancel linking) ---------- */
+    canvas.addEventListener("mousedown", (e) => {
+      if (e.target === canvas || e.target === svg) {
+        selectedId = null;
+        renderAll();
+      }
+    });
+    document.addEventListener("mouseup", (e) => {
+      if (linkingFrom && !e.target.closest(".dn-node")) finishLinking();
+    });
+
+    /* ---------- Adding steps from the palette ---------- */
+    function addNode(type, left, top) {
+      nodeSeq += 1;
+      const id = "n" + nodeSeq;
+      nodes.push({ id, type, name: capitalize(type) + " Step", left: left || 60, top: top || 60, assignee: "", notes: "" });
+      selectedId = id;
+      renderAll();
+    }
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    document.querySelectorAll(".palette-item").forEach((item, i) => {
+      item.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", item.dataset.type);
+        e.dataTransfer.effectAllowed = "copy";
+      });
+      // Click-to-add fallback for touch/trackpad users where native DnD is awkward.
+      item.addEventListener("click", () => {
+        addNode(item.dataset.type, 60 + (i % 4) * 40, 60 + Math.floor(i / 4) * 60);
+        toast("Step added", capitalize(item.dataset.type) + " dropped onto the canvas.", "success");
+      });
+    });
+    canvas.addEventListener("dragover", (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; });
+    canvas.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const type = e.dataTransfer.getData("text/plain");
+      if (!type) return;
+      const rect = canvas.getBoundingClientRect();
+      const left = e.clientX - rect.left + canvas.scrollLeft - 90;
+      const top = e.clientY - rect.top + canvas.scrollTop - 30;
+      addNode(type, Math.max(0, left), Math.max(0, top));
+    });
+
+    /* ---------- Toolbar actions ---------- */
+    document.getElementById("clearCanvasBtn").addEventListener("click", () => {
+      nodes = [];
+      connections = [];
+      selectedId = null;
+      renderAll();
+      toast("Canvas cleared", "Drag steps in from the palette to start over.", "warning");
+    });
+
+    document.getElementById("saveWorkflowBtn").addEventListener("click", () => {
+      toast("Workflow saved", "This is a prototype — nothing was persisted.", "success");
+    });
+
+    document.getElementById("testRunBtn").addEventListener("click", () => {
+      if (!nodes.length) { toast("Nothing to run", "Add a step to the canvas first.", "warning"); return; }
+      const starts = nodes.filter(n => !connections.some(c => c.to === n.id)).map(n => n.id);
+      const order = [];
+      const seen = new Set();
+      function walk(id) {
+        if (seen.has(id)) return;
+        seen.add(id); order.push(id);
+        connections.filter(c => c.from === id).forEach(c => walk(c.to));
+      }
+      starts.forEach(walk);
+      order.forEach((id, i) => {
+        setTimeout(() => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.classList.add("is-testing");
+          setTimeout(() => el.classList.remove("is-testing"), 550);
+        }, i * 450);
+      });
+      toast("Test run started", "Tracing the workflow step by step.", "running");
+    });
+
+    /* ---------- Init ---------- */
+    renderAll();
+    window.addEventListener("resize", renderConnections);
+  })();
+</script>
+
+<!-- Icon sprite -->
+<svg style="display:none">
+  <defs>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></symbol>
+    <symbol id="icon-check-square" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
+    <symbol id="icon-git-branch" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/><circle cx="18" cy="6" r="3"/></symbol>
+    <symbol id="icon-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-truck" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+    <symbol id="icon-briefcase" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+    <symbol id="icon-bar-chart" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></symbol>
+    <symbol id="icon-trending-up" viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></symbol>
+    <symbol id="icon-message-circle" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="icon-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></symbol>
+    <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="icon-chevrons-left" viewBox="0 0 24 24"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="icon-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="icon-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="icon-zap" viewBox="0 0 24 24"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></symbol>
+    <symbol id="icon-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="icon-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V15"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+  </defs>
+</svg>
+</body>
+</html>
