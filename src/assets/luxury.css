@@ -1,0 +1,70 @@
+/* Luxury layer — sits on top of base.css, touches only visual finish */
+
+.app-sidebar {
+  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg) 100%);
+}
+
+.sidebar-brand {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+.sidebar-brand .dot {
+  background: linear-gradient(135deg, var(--color-signal), var(--color-accent));
+  box-shadow: 0 0 0 3px var(--color-signal-soft);
+}
+
+.nav-item.active {
+  background: linear-gradient(90deg, var(--color-signal-soft), transparent);
+  position: relative;
+}
+.nav-item.active::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: -3px;
+  top: 15%;
+  height: 70%;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(180deg, var(--color-signal), var(--color-accent));
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-signal) 0%, #0A4A31 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 2px 8px rgba(14, 92, 61, 0.28);
+}
+.btn-primary:hover:not(:disabled) {
+  filter: none;
+  box-shadow: 0 4px 14px rgba(14, 92, 61, 0.38);
+  transform: translateY(-1px);
+}
+
+.card {
+  transition: box-shadow var(--duration-base) var(--ease), transform var(--duration-base) var(--ease);
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card-rail.status-running {
+  border-image: linear-gradient(180deg, var(--color-signal), var(--color-accent)) 1;
+}
+
+.avatar {
+  background: linear-gradient(135deg, var(--color-signal), #0A4A31);
+  color: #fff;
+}
+
+.badge.status-success,
+.card-rail.status-success .badge {
+  background: var(--status-success-soft);
+  color: var(--status-success);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-bg);
+}
