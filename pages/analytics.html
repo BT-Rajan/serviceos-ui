@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServiceOS — Analytics</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-brand"><span class="dot"></span><span>ServiceOS</span></div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-group-label">Overview</div>
+      <a class="nav-item" data-page="dashboard" href="dashboard.html"><svg class="icon"><use href="#icon-grid"/></svg><span>Dashboard</span></a>
+      <div class="sidebar-group-label">Work</div>
+      <a class="nav-item" data-page="projects" href="projects.html"><svg class="icon"><use href="#icon-folder"/></svg><span>Projects</span></a>
+      <a class="nav-item" data-page="tasks" href="tasks.html"><svg class="icon"><use href="#icon-check-square"/></svg><span>Tasks</span></a>
+      <a class="nav-item" data-page="documents" href="documents.html"><svg class="icon"><use href="#icon-file"/></svg><span>Documents</span></a>
+      <div class="sidebar-group-label">Workflow</div>
+      <a class="nav-item" data-page="workflow" href="workflow.html"><svg class="icon"><use href="#icon-git-branch"/></svg><span>Workflows</span></a>
+      <a class="nav-item" data-page="workflow-designer" href="workflow-designer.html"><svg class="icon"><use href="#icon-layout"/></svg><span>Workflow Designer</span></a>
+      <a class="nav-item" data-page="templates" href="templates.html"><svg class="icon"><use href="#icon-copy"/></svg><span>Templates</span></a>
+      <div class="sidebar-group-label">People</div>
+      <a class="nav-item" data-page="users" href="users.html"><svg class="icon"><use href="#icon-users"/></svg><span>Users</span></a>
+      <a class="nav-item" data-page="vendors" href="vendors.html"><svg class="icon"><use href="#icon-truck"/></svg><span>Vendors</span></a>
+      <a class="nav-item" data-page="clients" href="clients.html"><svg class="icon"><use href="#icon-briefcase"/></svg><span>Clients</span></a>
+      <div class="sidebar-group-label">Insights</div>
+      <a class="nav-item" data-page="reports" href="reports.html"><svg class="icon"><use href="#icon-bar-chart"/></svg><span>Reports</span></a>
+      <a class="nav-item active" data-page="analytics" href="analytics.html"><svg class="icon"><use href="#icon-trending-up"/></svg><span>Analytics</span></a>
+      <div class="sidebar-group-label">Communication</div>
+      <a class="nav-item" data-page="chatbot" href="chatbot.html"><svg class="icon"><use href="#icon-message-circle"/></svg><span>Chatbot</span></a>
+      <a class="nav-item" data-page="notifications" href="notifications.html"><svg class="icon"><use href="#icon-bell"/></svg><span>Notifications</span></a>
+      <div class="sidebar-group-label">Administration</div>
+      <a class="nav-item" data-page="agent-studio" href="agent-studio.html"><svg class="icon"><use href="#icon-cpu"/></svg><span>Agent Studio</span></a>
+      <a class="nav-item" data-page="audit" href="audit.html"><svg class="icon"><use href="#icon-shield"/></svg><span>Audit Log</span></a>
+      <a class="nav-item" data-page="settings" href="settings.html"><svg class="icon"><use href="#icon-settings"/></svg><span>Settings</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" id="sidebarCollapseBtn" style="width:100%;"><svg class="icon icon-directional"><use href="#icon-chevrons-left"/></svg><span>Collapse</span></button>
+    </div>
+  </aside>
+
+  <!-- ============ HEADER ============ -->
+  <header class="app-header">
+    <button class="header-toggle" id="sidebarMobileToggle" aria-label="Toggle sidebar"><svg class="icon"><use href="#icon-menu"/></svg></button>
+    <label class="header-search">
+      <svg class="icon icon-muted"><use href="#icon-search"/></svg>
+      <input type="text" placeholder="Search projects, tasks, clients…" id="globalSearchInput">
+      <kbd>/</kbd>
+    </label>
+    <div class="header-spacer"></div>
+    <div class="header-actions">
+      <button class="icon-button" id="themeToggleBtn" aria-label="Toggle theme"><svg class="icon" id="themeIcon"><use href="#icon-moon"/></svg></button>
+      <button class="icon-button" id="langToggleBtn" aria-label="Toggle language"><svg class="icon"><use href="#icon-globe"/></svg></button>
+      <button class="icon-button" id="notifBtn" aria-label="Notifications"><svg class="icon"><use href="#icon-bell"/></svg><span class="notif-dot"></span></button>
+      <button class="user-menu-trigger" id="userMenuBtn"><div class="avatar avatar-sm">RB</div><svg class="icon icon-sm icon-muted"><use href="#icon-chevron-down"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="app-main">
+    <div class="flex items-center justify-between" style="margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);">
+      <div>
+        <h1>Analytics</h1>
+        <p class="text-slate" style="margin-top:4px;">Deep-dive metrics across projects, revenue, and team utilization.</p>
+      </div>
+      <div class="flex gap-3 items-center">
+        <div class="segmented" id="rangeToggle">
+          <button data-range="7d">7D</button>
+          <button data-range="30d" class="active">30D</button>
+          <button data-range="90d">90D</button>
+          <button data-range="ytd">YTD</button>
+        </div>
+        <button class="btn btn-secondary"><svg class="icon icon-sm"><use href="#icon-file"/></svg>Export</button>
+      </div>
+    </div>
+
+    <!-- KPI STRIP -->
+    <div class="grid grid-4" style="margin-bottom: var(--space-6);">
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm text-slate">Revenue</div>
+            <div style="font-family:var(--font-display); font-size:var(--text-2xl); margin-top:var(--space-1);" class="mono">$186.4k</div>
+            <div class="badge status-success" style="margin-top:var(--space-2);">+12.4%</div>
+          </div>
+          <svg viewBox="0 0 80 32" width="80" height="32"><polyline points="0,26 15,22 30,24 45,14 60,10 80,4" fill="none" stroke="var(--status-success)" stroke-width="2"/></svg>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm text-slate">Tasks completed</div>
+            <div style="font-family:var(--font-display); font-size:var(--text-2xl); margin-top:var(--space-1);">312</div>
+            <div class="badge status-success" style="margin-top:var(--space-2);">+8.1%</div>
+          </div>
+          <svg viewBox="0 0 80 32" width="80" height="32"><polyline points="0,20 15,24 30,16 45,18 60,8 80,10" fill="none" stroke="var(--status-running)" stroke-width="2"/></svg>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm text-slate">Avg. cycle time</div>
+            <div style="font-family:var(--font-display); font-size:var(--text-2xl); margin-top:var(--space-1);">4.2<span style="font-size:var(--text-base); color:var(--color-slate);">d</span></div>
+            <div class="badge status-warning" style="margin-top:var(--space-2);">+0.4d</div>
+          </div>
+          <svg viewBox="0 0 80 32" width="80" height="32"><polyline points="0,8 15,10 30,14 45,12 60,20 80,24" fill="none" stroke="var(--status-warning)" stroke-width="2"/></svg>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm text-slate">Team utilization</div>
+            <div style="font-family:var(--font-display); font-size:var(--text-2xl); margin-top:var(--space-1);">78%</div>
+            <div class="badge status-success" style="margin-top:var(--space-2);">+3.0%</div>
+          </div>
+          <svg viewBox="0 0 80 32" width="80" height="32"><polyline points="0,22 15,18 30,20 45,12 60,14 80,6" fill="none" stroke="var(--color-signal)" stroke-width="2"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="grid" style="grid-template-columns: 1.6fr 1fr; margin-bottom: var(--space-6); align-items: stretch;">
+      <div class="chart-card">
+        <div class="card-header" style="margin-bottom: var(--space-4);">
+          <div><div class="card-title">Revenue vs. target</div><div class="card-subtitle">Last 6 months</div></div>
+          <div class="chart-legend" style="margin-top:0;">
+            <span class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--color-signal);"></span>Actual</span>
+            <span class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--color-border-strong);"></span>Target</span>
+          </div>
+        </div>
+        <svg viewBox="0 0 520 200" style="width:100%; height:200px;">
+          <polyline points="0,150 86,130 172,120 258,90 344,80 430,50 520,40" fill="none" stroke="var(--color-border-strong)" stroke-width="2" stroke-dasharray="4 4"/>
+          <polyline points="0,160 86,140 172,145 258,100 344,90 430,55 520,30" fill="none" stroke="var(--color-signal)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="0,160 86,140 172,145 258,100 344,90 430,55 520,30 520,200 0,200" fill="var(--color-signal-soft)" opacity="0.5" stroke="none"/>
+          <g fill="var(--color-signal)">
+            <circle cx="0" cy="160" r="3"/><circle cx="86" cy="140" r="3"/><circle cx="172" cy="145" r="3"/>
+            <circle cx="258" cy="100" r="3"/><circle cx="344" cy="90" r="3"/><circle cx="430" cy="55" r="3"/><circle cx="520" cy="30" r="3"/>
+          </g>
+        </svg>
+        <div class="chart-legend"><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-header" style="margin-bottom: var(--space-4);"><div class="card-title">Client revenue share</div></div>
+        <div class="flex items-center gap-4">
+          <svg viewBox="0 0 120 120" width="110" height="110">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--color-signal)" stroke-width="16" stroke-dasharray="105.6 301.6" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--status-success)" stroke-width="16" stroke-dasharray="75.4 301.6" stroke-dashoffset="-105.6" transform="rotate(-90 60 60)"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--status-warning)" stroke-width="16" stroke-dasharray="60.3 301.6" stroke-dashoffset="-181" transform="rotate(-90 60 60)"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="var(--color-border-strong)" stroke-width="16" stroke-dasharray="60.3 301.6" stroke-dashoffset="-241.3" transform="rotate(-90 60 60)"/>
+          </svg>
+          <div class="flex flex-col gap-2" style="flex:1;">
+            <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--color-signal);"></span>Acme Retail — 35%</div>
+            <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--status-success);"></span>Meridian Supply — 25%</div>
+            <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--status-warning);"></span>Northwind — 20%</div>
+            <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--color-border-strong);"></span>Others — 20%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="grid" style="grid-template-columns: 1fr 1fr; margin-bottom: var(--space-6); align-items: stretch;">
+      <div class="chart-card">
+        <div class="card-header" style="margin-bottom: var(--space-4);"><div><div class="card-title">Tasks completed per week</div><div class="card-subtitle">Last 8 weeks</div></div></div>
+        <svg viewBox="0 0 480 160" style="width:100%; height:160px;">
+          <g fill="var(--color-signal)">
+            <rect x="10" y="90" width="36" height="70" rx="3"/>
+            <rect x="66" y="70" width="36" height="90" rx="3"/>
+            <rect x="122" y="100" width="36" height="60" rx="3"/>
+            <rect x="178" y="60" width="36" height="100" rx="3"/>
+            <rect x="234" y="40" width="36" height="120" rx="3"/>
+            <rect x="290" y="55" width="36" height="105" rx="3"/>
+            <rect x="346" y="30" width="36" height="130" rx="3"/>
+            <rect x="402" y="20" width="36" height="140" rx="3"/>
+          </g>
+        </svg>
+        <div class="chart-legend"><span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span><span>W6</span><span>W7</span><span>W8</span></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-header" style="margin-bottom: var(--space-4);"><div class="card-title">Team utilization</div></div>
+        <div class="flex flex-col gap-3">
+          <div>
+            <div class="flex justify-between text-sm" style="margin-bottom:4px;"><span>Priya Kannan</span><span class="mono text-slate">92%</span></div>
+            <div class="progress"><div class="progress-bar" style="width:92%;"></div></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm" style="margin-bottom:4px;"><span>Rahul Dev</span><span class="mono text-slate">85%</span></div>
+            <div class="progress"><div class="progress-bar" style="width:85%;"></div></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm" style="margin-bottom:4px;"><span>Sara Menon</span><span class="mono text-slate">74%</span></div>
+            <div class="progress"><div class="progress-bar status-warning" style="width:74%;"></div></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm" style="margin-bottom:4px;"><span>James Tan</span><span class="mono text-slate">61%</span></div>
+            <div class="progress"><div class="progress-bar status-warning" style="width:61%;"></div></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm" style="margin-bottom:4px;"><span>Dinesh Kumar</span><span class="mono text-slate">45%</span></div>
+            <div class="progress"><div class="progress-bar status-danger" style="width:45%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP PROJECTS TABLE -->
+    <div class="card-header" style="margin-bottom: var(--space-4);"><h3>Top projects by revenue</h3></div>
+    <div class="table-wrap">
+      <table class="table-responsive">
+        <thead><tr><th>Project</th><th>Client</th><th>Revenue</th><th>Margin</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr class="status-running"><td data-label="Project">Client Onboarding</td><td data-label="Client">Acme Retail</td><td data-label="Revenue" class="mono">$42,000</td><td data-label="Margin" class="mono">38%</td><td data-label="Status"><span class="badge status-running">Running</span></td></tr>
+          <tr class="status-success"><td data-label="Project">Brand Refresh</td><td data-label="Client">Solace Wellness</td><td data-label="Revenue" class="mono">$28,500</td><td data-label="Margin" class="mono">44%</td><td data-label="Status"><span class="badge status-success">Complete</span></td></tr>
+          <tr class="status-running"><td data-label="Project">Fleet Audit</td><td data-label="Client">Meridian Supply</td><td data-label="Revenue" class="mono">$26,200</td><td data-label="Margin" class="mono">31%</td><td data-label="Status"><span class="badge status-running">Running</span></td></tr>
+          <tr class="status-warning"><td data-label="Project">Q3 Vendor Review</td><td data-label="Client">Northwind Logistics</td><td data-label="Revenue" class="mono">$18,900</td><td data-label="Margin" class="mono">22%</td><td data-label="Status"><span class="badge status-warning">At risk</span></td></tr>
+          <tr class="status-danger"><td data-label="Project">Vendor Sync Migration</td><td data-label="Client">Meridian Supply</td><td data-label="Revenue" class="mono">$9,400</td><td data-label="Margin" class="mono">12%</td><td data-label="Status"><span class="badge status-danger">Blocked</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/components.js"></script>
+<script src="../js/charts.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  (function () {
+    const rangeToggle = document.getElementById("rangeToggle");
+    if (rangeToggle) {
+      rangeToggle.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-range]");
+        if (!btn) return;
+        rangeToggle.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        if (window.ServiceOSToast) window.ServiceOSToast({ title: `Range set to ${btn.textContent}`, message: "Charts are static in this prototype.", status: "neutral" });
+      });
+    }
+  })();
+</script>
+
+<!-- Icon sprite -->
+<svg style="display:none">
+  <defs>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></symbol>
+    <symbol id="icon-check-square" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
+    <symbol id="icon-git-branch" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/><circle cx="18" cy="6" r="3"/></symbol>
+    <symbol id="icon-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-truck" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+    <symbol id="icon-briefcase" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+    <symbol id="icon-bar-chart" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></symbol>
+    <symbol id="icon-trending-up" viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></symbol>
+    <symbol id="icon-message-circle" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 21l2-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="icon-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></symbol>
+    <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="icon-chevrons-left" viewBox="0 0 24 24"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="icon-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  </defs>
+</svg>
+</body>
+</html>

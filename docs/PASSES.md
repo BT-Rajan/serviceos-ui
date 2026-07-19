@@ -23,7 +23,7 @@ Legend: ✅ done · ⬜ not started
 | 14 | `pages/vendors.html` | Vendor management. | ⬜ |
 | 15 | `pages/clients.html` | Client management. | ✅ |
 | 16 | `pages/reports.html` | Reporting. | ✅ |
-| 17 | `pages/analytics.html` | Analytics. | ⬜ |
+| 17 | `pages/analytics.html` | Analytics. | ✅ |
 | 18 | `pages/chatbot.html` | Communication — customer chatbot and knowledge chatbot. | ⬜ |
 | 19 | `pages/notifications.html` | Notification center. | ⬜ |
 | 20 | `pages/settings.html` | Administration — settings. | ⬜ |
