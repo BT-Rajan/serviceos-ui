@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AppShell from '../components/layout/AppShell.vue'
 import DashboardView from '../views/DashboardView.vue'
 import ProjectsView from '../views/ProjectsView.vue'
+import ProjectDetailsView from '../views/ProjectDetailsView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
 const stub = (title) => ({ component: PlaceholderView, props: { title } })
@@ -15,7 +16,7 @@ export const router = createRouter({
       children: [
         { path: '', name: 'dashboard', component: DashboardView },
         { path: 'projects', name: 'projects', component: ProjectsView },
-        { path: 'projects/details', name: 'project-details', ...stub('Project Details') },
+        { path: 'projects/details', name: 'project-details', component: ProjectDetailsView },
         { path: 'tasks', name: 'tasks', ...stub('Tasks') },
         { path: 'documents', name: 'documents', ...stub('Documents') },
         { path: 'workflow', name: 'workflow', ...stub('Workflows') },
