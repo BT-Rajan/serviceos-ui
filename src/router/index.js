@@ -3,6 +3,7 @@ import AppShell from '../components/layout/AppShell.vue'
 import DashboardView from '../views/DashboardView.vue'
 import ProjectsView from '../views/ProjectsView.vue'
 import ProjectDetailsView from '../views/ProjectDetailsView.vue'
+import WorkflowView from '../views/WorkflowView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
 const stub = (title) => ({ component: PlaceholderView, props: { title } })
@@ -19,7 +20,7 @@ export const router = createRouter({
         { path: 'projects/details', name: 'project-details', component: ProjectDetailsView },
         { path: 'tasks', name: 'tasks', ...stub('Tasks') },
         { path: 'documents', name: 'documents', ...stub('Documents') },
-        { path: 'workflow', name: 'workflow', ...stub('Workflows') },
+        { path: 'workflow', name: 'workflow', component: WorkflowView },
         { path: 'workflow-designer', name: 'workflow-designer', ...stub('Workflow Designer') },
         { path: 'templates', name: 'templates', ...stub('Templates') },
         { path: 'users', name: 'users', ...stub('Users') },
