@@ -10,7 +10,7 @@ const max = computed(() => Math.max(...props.values.map(v => v.value)) || 1)
 </script>
 
 <template>
-  <div class="flex items-end gap-3" :style="{ height: height + 'px' }">
+  <div class="flex items-end gap-3" dir="ltr" :style="{ height: height + 'px' }">
     <div v-for="(v, i) in values" :key="i" class="flex flex-col items-center gap-2" style="flex:1; height:100%; justify-content:flex-end;">
       <div
         :style="{

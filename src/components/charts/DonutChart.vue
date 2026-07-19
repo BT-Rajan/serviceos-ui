@@ -21,7 +21,7 @@ const arcs = computed(() => {
 </script>
 
 <template>
-  <div class="flex items-center gap-4">
+  <div class="flex items-center gap-4" dir="ltr">
     <svg viewBox="0 0 120 120" width="120" height="120">
       <circle cx="60" cy="60" r="48" fill="none" stroke="var(--color-border)" stroke-width="16" />
       <circle

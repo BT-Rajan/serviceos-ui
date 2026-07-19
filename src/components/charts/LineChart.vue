@@ -25,7 +25,7 @@ const areaPoints = computed(() => `${linePoints.value} ${props.width},${props.he
 </script>
 
 <template>
-  <div>
+  <div dir="ltr">
     <svg :viewBox="`0 0 ${width} ${height}`" style="width:100%; height:auto;">
       <polyline :points="areaPoints" fill="var(--color-signal-soft)" opacity="0.6" stroke="none" />
       <polyline :points="linePoints" fill="none" stroke="var(--color-signal)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
