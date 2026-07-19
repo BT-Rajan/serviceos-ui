@@ -24,7 +24,7 @@ Legend: ✅ done · ⬜ not started
 | 15 | `pages/clients.html` | Client management. | ✅ |
 | 16 | `pages/reports.html` | Reporting. | ✅ |
 | 17 | `pages/analytics.html` | Analytics. | ✅ |
-| 18 | `pages/chatbot.html` | Communication — customer chatbot and knowledge chatbot. | ⬜ |
+| 18 | `pages/chatbot.html` | Communication — customer chatbot and knowledge chatbot. | ✅ |
 | 19 | `pages/notifications.html` | Notification center. | ⬜ |
 | 20 | `pages/settings.html` | Administration — settings. | ⬜ |
 | 21 | `pages/audit.html` | Administration — audit log. | ⬜ |
