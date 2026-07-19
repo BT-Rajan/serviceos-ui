@@ -21,7 +21,7 @@ Legend: ✅ done · ⬜ not started
 | 12 | `pages/documents.html` | Document center. | ⬜ |
 | 13 | `pages/users.html` | User management. | ⬜ |
 | 14 | `pages/vendors.html` | Vendor management. | ⬜ |
-| 15 | `pages/clients.html` | Client management. | ⬜ |
+| 15 | `pages/clients.html` | Client management. | ✅ |
 | 16 | `pages/reports.html` | Reporting. | ⬜ |
 | 17 | `pages/analytics.html` | Analytics. | ⬜ |
 | 18 | `pages/chatbot.html` | Communication — customer chatbot and knowledge chatbot. | ⬜ |
